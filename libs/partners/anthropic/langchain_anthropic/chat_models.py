@@ -669,7 +669,14 @@ class ChatAnthropic(BaseChatModel):
         if stream_usage is None:
             stream_usage = self.stream_usage
         params = self._format_params(messages=messages, stop=stop, **kwargs)
-        stream = self._client.messages.create(**params, stream=True)
+        
+        # Remove the 'base_url' parameter from params
+        base_url = params.pop('base_url', None)
+        
+        # Pass the 'base_url' directly to the Client constructor
+        client = anthropic.Client(base_url=base_url)
+        
+        stream = client.messages.create(**params, stream=True)
         coerce_content_to_string = not _tools_in_params(params)
         for event in stream:
             msg = _make_message_chunk_from_anthropic_event(
